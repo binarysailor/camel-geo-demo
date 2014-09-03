@@ -1,4 +1,4 @@
-package szymanski.geo;
+package szymanski.cameldemo;
 
 import java.awt.Point;
 
@@ -10,7 +10,7 @@ public class Text2PointProcessor implements Processor {
 	@Override
 	public void process(Exchange exchange) throws Exception {
 		String text = exchange.getIn().getBody(String.class);
-		exchange.getIn().setBody(toPoint(text));
+		exchange.getOut().setBody(toPoint(text));
 	}
 
 	private Point toPoint(String text) {

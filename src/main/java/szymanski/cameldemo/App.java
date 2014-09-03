@@ -1,22 +1,21 @@
-package szymanski.geo;
+package szymanski.cameldemo;
 
-import java.awt.Point;
+import java.math.BigDecimal;
 
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.impl.SimpleRegistry;
 
-import szymanski.geo.visualiser.GeoDrawingBean;
-import szymanski.geo.visualiser.GeoFrame;
+import szymanski.cameldemo.visualizer.api.Visualizer;
+import szymanski.cameldemo.visualizer.impl.VisualizerFactory;
 
 public class App {
 	public static void main(String[] args) throws Exception {
-		GeoFrame geo = new GeoFrame();
-		geo.setVisible(true);
+		Visualizer visualizer = VisualizerFactory.create();
 
 		SimpleRegistry registry = new SimpleRegistry();
 		registry.put("text2Point", new Text2PointProcessor());
-		registry.put("geo", new GeoDrawingBean(geo));
+		registry.put("adapter", new VisualizerAdapter(visualizer));
 		
 		DefaultCamelContext context = new DefaultCamelContext(registry);
 		context.addRoutes(new RouteBuilder() {
@@ -38,10 +37,10 @@ public class App {
 				from("seda:a").to("bean:geo");
 				
 				from("seda:pretext").to("seda:text");
-				from("seda:text").to("bean:text2Point");
-				from("bean:text2Point").to("seda:a");
-				*/
-				from("direct:a").to("bean:geo");
+				from("seda:text").to("bean:text2Point").to("seda:a");
+				//from("direct:a").to("bean:geo");
+				 */
+				from("stream:in?promptMessage=Enter text:").to("stream:out");
 			}
 		});
 		context.start();
@@ -49,6 +48,8 @@ public class App {
 		context.createProducerTemplate().sendBody("bean:text2Point", "80 50");
 		context.createProducerTemplate().sendBody("seda:text", "70 34");
 		context.createProducerTemplate().sendBody("seda:pretext", "100 34");
-		context.createProducerTemplate().sendBody("direct:a", new Point(100, 100));
+		//context.createProducerTemplate().sendBody("direct:a", new Point(100, 100));
+		BigDecimal body = (BigDecimal)context.createProducerTemplate().requestBody("seda:text", "3 4");
+		System.out.println(body);
 	}
 }

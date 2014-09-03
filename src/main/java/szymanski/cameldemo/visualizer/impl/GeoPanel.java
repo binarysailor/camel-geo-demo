@@ -1,4 +1,4 @@
-package szymanski.geo.visualiser;
+package szymanski.cameldemo.visualizer.impl;
 
 import java.awt.Color;
 import java.awt.Graphics;
@@ -10,12 +10,11 @@ import javax.swing.JPanel;
 
 @SuppressWarnings("serial")
 class GeoPanel extends JPanel {
+	private final static int CIRCLE_RADIUS = 3;
 	private List<Point> points = new LinkedList<>();
-	private Stencil stencil;
 	
-	GeoPanel(Stencil stencil) {
+	GeoPanel() {
 		setSize(500, 400);
-		this.stencil = stencil;
 	}
 	
 	@Override
@@ -27,7 +26,7 @@ class GeoPanel extends JPanel {
 		g.drawRect(2, 2, getSize().width - 8, getSize().height- 8);
 		synchronized (points) {
 			for (Point p : points) {
-				stencil.draw(g, p);
+				g.fillArc(p.x + getWidth()/2, p.y + getHeight()/2, CIRCLE_RADIUS, CIRCLE_RADIUS, 0, 360);
 			}
 		}
 	}

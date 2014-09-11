@@ -6,13 +6,25 @@
         http://camel.apache.org/schema/spring
 		http://camel.apache.org/schema/spring/camel-spring-2.13.2.xsd">
 	
+	<bean id="visualizer" 
+		class="szymanski.cameldemo.visualizer.impl.VisualizerFactory" factory-method="create" />
+		
+	<bean id="stoppable" class="szymanski.cameldemo.visualizer.impl.SpringContextStoppable">
+		<constructor-arg ref="visualizer" />
+	</bean>
+	
+	<bean id="text2Point" class="szymanski.cameldemo.Text2PointProcessor" />
+	
+	<bean id="adapter" class="szymanski.cameldemo.VisualizerAdapter">
+		<constructor-arg ref="visualizer" />
+	</bean>
+	
 	<camelContext xmlns="http://camel.apache.org/schema/spring">
 		<route>
-			<from uri="stream:in" />
-			<filter>
-				<simple>${body} contains 'bomb'</simple>
-				<to uri="log:demo?level=WARN" />
-			</filter>
+			<from uri="stream:in?promptMessage=Enter%20coordinates (Spring): " />
+			<convertBodyTo type="java.lang.String" />
+			<bean ref="text2Point" />
+			<to uri="bean:adapter" />
 		</route>
 	</camelContext>
 </beans>

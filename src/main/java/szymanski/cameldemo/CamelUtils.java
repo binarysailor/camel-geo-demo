@@ -12,6 +12,8 @@ import org.apache.camel.CamelContext;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.springframework.context.Lifecycle;
 
+import szymanski.cameldemo.visualizer.api.Stoppable;
+
 class CamelUtils {
 	public static void stopAfterWindowClosed(DefaultCamelContext context) {
 		WindowListener listener = new StopCamelContext(context);
@@ -21,6 +23,28 @@ class CamelUtils {
 	public static void stopAfterWindowClosed(Lifecycle appContext) {
 		WindowListener listener = new StopSpringContext(appContext);
 		CamelUtils.createWindowWithListener(listener);
+	}
+	
+	public static Stoppable stoppableCamel(final CamelContext ctx) {
+		return new Stoppable() {
+			@Override
+			public void stop() {
+				try {
+					ctx.stop();
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		};
+	}
+	
+	public static Stoppable stoppableSpring(final Lifecycle ctx) {
+		return new Stoppable() {
+			@Override
+			public void stop() {
+				ctx.stop();
+			}
+		};
 	}
 	
 	private static void createWindowWithListener(final WindowListener listener) {

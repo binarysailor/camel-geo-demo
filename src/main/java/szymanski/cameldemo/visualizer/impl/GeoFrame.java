@@ -36,8 +36,8 @@ class GeoFrame extends JFrame implements Visualizer {
 	}
 
 	@Override
-	public void showPoint(Color color, int panelIndex, int x, int y) {
-		panels[panelIndex].addPoint(x, y);
+	public void showPoint(int panelIndex, int x, int y, Color color) {
+		panels[panelIndex].addPoint(new Dot(x, y, color));
 		panels[panelIndex].repaint();		
 	}
 	

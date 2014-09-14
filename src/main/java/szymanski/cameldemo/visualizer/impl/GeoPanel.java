@@ -2,7 +2,6 @@ package szymanski.cameldemo.visualizer.impl;
 
 import java.awt.Color;
 import java.awt.Graphics;
-import java.awt.Point;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -10,8 +9,8 @@ import javax.swing.JPanel;
 
 @SuppressWarnings("serial")
 class GeoPanel extends JPanel {
-	private final static int CIRCLE_RADIUS = 3;
-	private List<Point> points = new LinkedList<>();
+	private final static int CIRCLE_RADIUS = 6;
+	private List<Dot> dots = new LinkedList<>();
 	
 	GeoPanel() {
 		setSize(500, 400);
@@ -24,16 +23,18 @@ class GeoPanel extends JPanel {
 		g.fillRect(0, 0, getSize().width, getSize().height);
 		g.setColor(Color.black);
 		g.drawRect(2, 2, getSize().width - 8, getSize().height- 8);
-		synchronized (points) {
-			for (Point p : points) {
-				g.fillArc(p.x + getWidth()/2, p.y + getHeight()/2, CIRCLE_RADIUS, CIRCLE_RADIUS, 0, 360);
+		synchronized (dots) {
+			for (Dot d : dots) {
+				g.setColor(d.getColor());
+				g.fillArc(d.getX() + getWidth()/2, d.getY() + getHeight()/2, 
+						CIRCLE_RADIUS, CIRCLE_RADIUS, 0, 360);
 			}
 		}
 	}
-	
-	public void addPoint(int x, int y) {
-		synchronized (points) {
-			points.add(new Point(x, y));
+
+	public void addPoint(Dot dot) {
+		synchronized (dots) {
+			dots.add(dot);
 		}
 		invalidate();
 	}

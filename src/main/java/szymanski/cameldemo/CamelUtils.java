@@ -9,6 +9,8 @@ import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
 import org.apache.camel.CamelContext;
+import org.apache.camel.Exchange;
+import org.apache.camel.Predicate;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.springframework.context.Lifecycle;
 
@@ -95,6 +97,26 @@ class CamelUtils {
 				e1.printStackTrace();
 			}
 		}
+	}
+	
+	public static Predicate isXml() {
+		return new Predicate() {
+			@Override
+			public boolean matches(Exchange exchange) {
+				String body = exchange.getIn().getBody(String.class).trim();
+				return body.startsWith("<") && body.endsWith(">");
+			}
+		};
+	}
+	
+	public static Predicate isPlainText() {
+		return new Predicate() {
+			@Override
+			public boolean matches(Exchange exchange) {
+				String body = exchange.getIn().getBody(String.class).trim();
+				return body.matches("\\-?\\d+\\s\\-?\\d+");
+			}
+		};
 	}
 
 }

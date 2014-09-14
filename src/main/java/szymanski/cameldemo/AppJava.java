@@ -21,18 +21,19 @@ public class AppJava {
 		context.addRoutes(new RouteBuilder() {
 			@Override
 			public void configure() throws Exception {
-				from("stream:in?promptMessage=Enter%20coordinates:")
+				from("file://c:/camel-in")
 					.choice()
 						.when(isPlainText())
-							.processRef("text2Point").endChoice()
+							.split(body().tokenize("\n"))
+							.processRef("text2Point")
+							.to("bean:adapter0")
+						.endChoice()
 						.when(isXml())
-							.setBody().xquery("concat(/point/x, ' ', /point/y)", String.class).processRef("text2Point").endChoice()
-					.end()
-					.choice()
-						.when().el("${in.body.x < 0 and in.body.y >= 0}").to("bean:adapter0")
-						.when().el("${in.body.x >= 0 and in.body.y >= 0}").to("bean:adapter1")
-						.when().el("${in.body.x < 0 and in.body.y < 0}").to("bean:adapter2")
-						.when().el("${in.body.x >= 0 and in.body.y < 0}").to("bean:adapter3")
+							.split(xpath("/points/point"))
+							.setBody().xquery("concat(/point/x, ' ', /point/y)", String.class)
+							.processRef("text2Point")
+							.to("bean:adapter0")
+						.endChoice()
 					.end();
 			}
 		});

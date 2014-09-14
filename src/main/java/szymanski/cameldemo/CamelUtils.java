@@ -113,8 +113,7 @@ class CamelUtils {
 		return new Predicate() {
 			@Override
 			public boolean matches(Exchange exchange) {
-				String body = exchange.getIn().getBody(String.class).trim();
-				return body.matches("\\-?\\d+\\s\\-?\\d+");
+				return !isXml().matches(exchange);
 			}
 		};
 	}

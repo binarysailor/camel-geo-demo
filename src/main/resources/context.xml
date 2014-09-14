@@ -19,50 +19,28 @@
 		<constructor-arg ref="visualizer" />
 		<constructor-arg value="0" />
 	</bean>
-	<bean id="adapter1" class="szymanski.cameldemo.VisualizerAdapter">
-		<constructor-arg ref="visualizer" />
-		<constructor-arg value="1" />
-	</bean>
-	<bean id="adapter2" class="szymanski.cameldemo.VisualizerAdapter">
-		<constructor-arg ref="visualizer" />
-		<constructor-arg value="2" />
-	</bean>
-	<bean id="adapter3" class="szymanski.cameldemo.VisualizerAdapter">
-		<constructor-arg ref="visualizer" />
-		<constructor-arg value="3" />
-	</bean>	
 	
 	<camelContext xmlns="http://camel.apache.org/schema/spring">
 		<route>
-			<from uri="stream:in?promptMessage=Enter%20coordinates (Spring): " />
+			<from uri="file://c:/camel-in" />
 			<choice>
 				<when>
 					<spel>#{T(szymanski.cameldemo.CamelUtils).isXml().matches(exchange)}</spel>
-					<setBody><xquery type="java.lang.String">concat(/point/x, ' ', /point/y)</xquery></setBody>
-					<process ref="text2Point" />
+					<split>
+						<xpath>/points/point</xpath>
+						<setBody><xquery type="java.lang.String">concat(/point/x, ' ', /point/y)</xquery></setBody>
+						<process ref="text2Point" />
+						<to uri="bean:adapter0" />
+					</split>
 				</when>
 				<when>
 					<spel>#{T(szymanski.cameldemo.CamelUtils).isPlainText().matches(exchange)}</spel>
-					<process ref="text2Point" />
+					<split>
+						<tokenize token="\n" />
+						<process ref="text2Point" />
+						<to uri="bean:adapter0" />
+					</split>
 				</when>				
-			</choice>
-			<choice>
-				<when>
-					<el><![CDATA[ ${in.body.x < 0 and in.body.y >= 0} ]]></el>
-					<to uri="bean:adapter0" />
-				</when>
-				<when>
-					<el><![CDATA[ ${in.body.x >= 0 and in.body.y >= 0} ]]></el>
-					<to uri="bean:adapter1" />
-				</when>
-				<when>
-					<el><![CDATA[ ${in.body.x < 0 and in.body.y < 0} ]]></el>
-					<to uri="bean:adapter2" />
-				</when>
-				<when>
-					<el><![CDATA[ ${in.body.x >= 0 and in.body.y < 0} ]]></el>
-					<to uri="bean:adapter3" />
-				</when>			
 			</choice>
 		</route>
 	</camelContext>

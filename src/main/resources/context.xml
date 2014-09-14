@@ -15,16 +15,45 @@
 	
 	<bean id="text2Point" class="szymanski.cameldemo.Text2PointProcessor" />
 	
-	<bean id="adapter" class="szymanski.cameldemo.VisualizerAdapter">
+	<bean id="adapter0" class="szymanski.cameldemo.VisualizerAdapter">
 		<constructor-arg ref="visualizer" />
+		<constructor-arg value="0" />
 	</bean>
+	<bean id="adapter1" class="szymanski.cameldemo.VisualizerAdapter">
+		<constructor-arg ref="visualizer" />
+		<constructor-arg value="1" />
+	</bean>
+	<bean id="adapter2" class="szymanski.cameldemo.VisualizerAdapter">
+		<constructor-arg ref="visualizer" />
+		<constructor-arg value="2" />
+	</bean>
+	<bean id="adapter3" class="szymanski.cameldemo.VisualizerAdapter">
+		<constructor-arg ref="visualizer" />
+		<constructor-arg value="3" />
+	</bean>	
 	
 	<camelContext xmlns="http://camel.apache.org/schema/spring">
 		<route>
 			<from uri="stream:in?promptMessage=Enter%20coordinates (Spring): " />
-			<convertBodyTo type="java.lang.String" />
 			<bean ref="text2Point" />
-			<to uri="bean:adapter" />
+			<choice>
+				<when>
+					<el><![CDATA[ ${in.body.x < 0 and in.body.y >= 0} ]]></el>
+					<to uri="bean:adapter0" />
+				</when>
+				<when>
+					<el><![CDATA[ ${in.body.x >= 0 and in.body.y >= 0} ]]></el>
+					<to uri="bean:adapter1" />
+				</when>
+				<when>
+					<el><![CDATA[ ${in.body.x < 0 and in.body.y < 0} ]]></el>
+					<to uri="bean:adapter2" />
+				</when>
+				<when>
+					<el><![CDATA[ ${in.body.x >= 0 and in.body.y < 0} ]]></el>
+					<to uri="bean:adapter3" />
+				</when>			
+			</choice>
 		</route>
 	</camelContext>
 </beans>

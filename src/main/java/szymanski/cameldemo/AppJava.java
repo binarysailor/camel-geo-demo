@@ -26,7 +26,12 @@ public class AppJava {
 				from("stream:in?promptMessage=Enter%20coordinates:")
 					.convertBodyTo(String.class)
 					.processRef("text2Point")
-					.to("bean:adapter");
+					.choice()
+						.when().el("${in.body.x < 0 and in.body.y >= 0}").to("bean:adapter0")
+						.when().el("${in.body.x >= 0 and in.body.y >= 0}").to("bean:adapter1")
+						.when().el("${in.body.x < 0 and in.body.y < 0}").to("bean:adapter2")
+						.when().el("${in.body.x >= 0 and in.body.y < 0}").to("bean:adapter3")
+					.endChoice();
 			}
 		});
 		context.start();
@@ -37,7 +42,10 @@ public class AppJava {
 		
 		SimpleRegistry registry = new SimpleRegistry();
 		registry.put("text2Point", new Text2PointProcessor());
-		registry.put("adapter", new VisualizerAdapter(visualizer));
+		registry.put("adapter0", new VisualizerAdapter(visualizer, 0));
+		registry.put("adapter1", new VisualizerAdapter(visualizer, 1));
+		registry.put("adapter2", new VisualizerAdapter(visualizer, 2));
+		registry.put("adapter3", new VisualizerAdapter(visualizer, 3));
 		return registry;
 	}
 }

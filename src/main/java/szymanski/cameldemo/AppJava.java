@@ -21,7 +21,7 @@ public class AppJava {
 		context.addRoutes(new RouteBuilder() {
 			@Override
 			public void configure() throws Exception {
-				from("file://c:/camel-in")
+				from("file://c:/camel-in", "dataset:random?produceDelay=30")
 					.choice()
 						.when(isPlainText())
 							.split(body().tokenize("\n"))
@@ -49,6 +49,7 @@ public class AppJava {
 		registry.put("adapter1", new VisualizerAdapter(visualizer, 1));
 		registry.put("adapter2", new VisualizerAdapter(visualizer, 2));
 		registry.put("adapter3", new VisualizerAdapter(visualizer, 3));
+		registry.put("random", new RandomPointDataSet(40, 30, 500));
 		return registry;
 	}
 }

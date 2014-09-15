@@ -25,16 +25,15 @@ public class AppJava {
 					.choice()
 						.when(isPlainText())
 							.split(body().tokenize("\n"))
-							.processRef("text2Point")
-							.to("bean:adapter0")
+							.to("direct:singleLineText")
 						.endChoice()
 						.when(isXml())
 							.split(xpath("/points/point"))
 							.setBody().xquery("concat(/point/x, ' ', /point/y)", String.class)
-							.processRef("text2Point")
-							.to("bean:adapter0")
+							.to("direct:singleLineText")
 						.endChoice()
 					.end();
+				from("direct:singleLineText").processRef("text2Point").to("bean:adapter0");
 			}
 		});
 		context.start();

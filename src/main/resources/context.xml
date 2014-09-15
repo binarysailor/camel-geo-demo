@@ -15,6 +15,12 @@
 	
 	<bean id="text2Point" class="szymanski.cameldemo.Text2PointProcessor" />
 	
+	<bean id="random" class="szymanski.cameldemo.RandomPointDataSet">
+		<constructor-arg value="50" />
+		<constructor-arg value="30" />
+		<constructor-arg value="100" />
+	</bean>
+	
 	<bean id="adapter0" class="szymanski.cameldemo.VisualizerAdapter">
 		<constructor-arg ref="visualizer" />
 		<constructor-arg value="0" />
@@ -22,26 +28,29 @@
 	
 	<camelContext xmlns="http://camel.apache.org/schema/spring">
 		<route>
-			<from uri="file://c:/camel-in" />
+			<from uri="dataset:random" />
 			<choice>
 				<when>
 					<spel>#{T(szymanski.cameldemo.CamelUtils).isXml().matches(exchange)}</spel>
 					<split>
 						<xpath>/points/point</xpath>
 						<setBody><xquery type="java.lang.String">concat(/point/x, ' ', /point/y)</xquery></setBody>
-						<process ref="text2Point" />
-						<to uri="bean:adapter0" />
+						<to uri="direct:singleLineText" />
 					</split>
 				</when>
 				<when>
 					<spel>#{T(szymanski.cameldemo.CamelUtils).isPlainText().matches(exchange)}</spel>
 					<split>
 						<tokenize token="\n" />
-						<process ref="text2Point" />
-						<to uri="bean:adapter0" />
+						<to uri="direct:singleLineText" />
 					</split>
 				</when>				
 			</choice>
+		</route>
+		<route>
+			<from uri="direct:singleLineText" />
+			<process ref="text2Point" />
+			<to uri="bean:adapter0" />
 		</route>
 	</camelContext>
 </beans>

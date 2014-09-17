@@ -18,39 +18,43 @@
 	<bean id="random" class="szymanski.cameldemo.RandomPointDataSet">
 		<constructor-arg value="50" />
 		<constructor-arg value="30" />
-		<constructor-arg value="100" />
+		<constructor-arg value="300" />
 	</bean>
 	
 	<bean id="adapter0" class="szymanski.cameldemo.VisualizerAdapter">
 		<constructor-arg ref="visualizer" />
 		<constructor-arg value="0" />
 	</bean>
+	<bean id="adapter1" class="szymanski.cameldemo.VisualizerAdapter">
+		<constructor-arg ref="visualizer" />
+		<constructor-arg value="1" />
+	</bean>
+	<bean id="adapter2" class="szymanski.cameldemo.VisualizerAdapter">
+		<constructor-arg ref="visualizer" />
+		<constructor-arg value="2" />
+	</bean>
+	<bean id="adapter3" class="szymanski.cameldemo.VisualizerAdapter">
+		<constructor-arg ref="visualizer" />
+		<constructor-arg value="3" />
+	</bean>			
+	
+	<bean id="pointRecipientListHeader" class="szymanski.cameldemo.PointRecipientList" />
 	
 	<camelContext xmlns="http://camel.apache.org/schema/spring">
 		<route>
-			<from uri="dataset:random" />
-			<choice>
-				<when>
-					<spel>#{T(szymanski.cameldemo.CamelUtils).isXml().matches(exchange)}</spel>
-					<split>
-						<xpath>/points/point</xpath>
-						<setBody><xquery type="java.lang.String">concat(/point/x, ' ', /point/y)</xquery></setBody>
-						<to uri="direct:singleLineText" />
-					</split>
-				</when>
-				<when>
-					<spel>#{T(szymanski.cameldemo.CamelUtils).isPlainText().matches(exchange)}</spel>
-					<split>
-						<tokenize token="\n" />
-						<to uri="direct:singleLineText" />
-					</split>
-				</when>				
-			</choice>
-		</route>
-		<route>
-			<from uri="direct:singleLineText" />
-			<process ref="text2Point" />
-			<to uri="bean:adapter0" />
+			<from uri="dataset:random?produceDelay=20" />
+			<bean ref="text2Point" />
+			<bean ref="pointRecipientListHeader" />
+			<recipientList>
+				<javaScript><![CDATA[
+					var resultArray = [];
+					var indexes = request.headers.get('adapterIndexes');
+					for (var i = 0; i < indexes.length; i++) 
+						resultArray.push('bean:adapter' + indexes[i]);
+					result = resultArray.join(',');				
+				]]>
+				</javaScript>
+			</recipientList>
 		</route>
 	</camelContext>
 </beans>

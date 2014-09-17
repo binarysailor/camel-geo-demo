@@ -1,8 +1,5 @@
 package szymanski.cameldemo;
 
-import static szymanski.cameldemo.CamelUtils.isPlainText;
-import static szymanski.cameldemo.CamelUtils.isXml;
-
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.impl.SimpleRegistry;
@@ -21,19 +18,15 @@ public class AppJava {
 		context.addRoutes(new RouteBuilder() {
 			@Override
 			public void configure() throws Exception {
-				from("file://c:/camel-in", "dataset:random?produceDelay=30")
-					.choice()
-						.when(isPlainText())
-							.split(body().tokenize("\n"))
-							.to("direct:singleLineText")
-						.endChoice()
-						.when(isXml())
-							.split(xpath("/points/point"))
-							.setBody().xquery("concat(/point/x, ' ', /point/y)", String.class)
-							.to("direct:singleLineText")
-						.endChoice()
-					.end();
-				from("direct:singleLineText").processRef("text2Point").to("bean:adapter0");
+				from("dataset:random?produceDelay=20")
+				.beanRef("text2Point")
+				.beanRef("pointRecipientList") // sets the header
+				.recipientList().javaScript( // reads the header
+						  "var resultArray = [];"
+						+ "var indexes = request.headers.get('adapterIndexes'); "
+						+ "for (var i = 0; i < indexes.length; i++) resultArray.push('bean:adapter' + indexes[i]);"
+						+ "result = resultArray.join(',')"
+				);
 			}
 		});
 		context.start();
@@ -49,6 +42,7 @@ public class AppJava {
 		registry.put("adapter2", new VisualizerAdapter(visualizer, 2));
 		registry.put("adapter3", new VisualizerAdapter(visualizer, 3));
 		registry.put("random", new RandomPointDataSet(40, 30, 500));
+		registry.put("pointRecipientList", new PointRecipientList());
 		return registry;
 	}
 }

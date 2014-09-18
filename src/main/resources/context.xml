@@ -5,6 +5,7 @@
         http://www.springframework.org/schema/beans/spring-beans.xsd
         http://camel.apache.org/schema/spring
 		http://camel.apache.org/schema/spring/camel-spring-2.12.3.xsd">
+	<import resource="h2-context.xml"/>
 	
 	<bean id="visualizer" 
 		class="szymanski.cameldemo.visualizer.impl.VisualizerFactory" factory-method="create" />
@@ -15,46 +16,44 @@
 	
 	<bean id="text2Point" class="szymanski.cameldemo.Text2PointProcessor" />
 	
-	<bean id="random" class="szymanski.cameldemo.RandomPointDataSet">
+	<bean id="uniqueRandom" class="szymanski.cameldemo.NonRepeatingRandomPointDataSet">
 		<constructor-arg value="50" />
-		<constructor-arg value="30" />
-		<constructor-arg value="300" />
+		<constructor-arg value="40" />
+		<constructor-arg value="6000" />
 	</bean>
+	
+	<bean id="map2Color" class="szymanski.cameldemo.ColorMapper" />
 	
 	<bean id="adapter0" class="szymanski.cameldemo.VisualizerAdapter">
 		<constructor-arg ref="visualizer" />
 		<constructor-arg value="0" />
 	</bean>
-	<bean id="adapter1" class="szymanski.cameldemo.VisualizerAdapter">
-		<constructor-arg ref="visualizer" />
-		<constructor-arg value="1" />
-	</bean>
-	<bean id="adapter2" class="szymanski.cameldemo.VisualizerAdapter">
-		<constructor-arg ref="visualizer" />
-		<constructor-arg value="2" />
-	</bean>
-	<bean id="adapter3" class="szymanski.cameldemo.VisualizerAdapter">
-		<constructor-arg ref="visualizer" />
-		<constructor-arg value="3" />
-	</bean>			
 	
-	<bean id="pointRecipientListHeader" class="szymanski.cameldemo.PointRecipientList" />
+	<bean id="combinePointAndColor" class="szymanski.cameldemo.CombineCoordsAndColor" factory-method="instance" />
 	
 	<camelContext xmlns="http://camel.apache.org/schema/spring">
 		<route>
-			<from uri="dataset:random?produceDelay=20" />
-			<bean ref="text2Point" />
-			<bean ref="pointRecipientListHeader" />
-			<recipientList>
-				<javaScript><![CDATA[
-					var resultArray = [];
-					var indexes = request.headers.get('adapterIndexes');
-					for (var i = 0; i < indexes.length; i++) 
-						resultArray.push('bean:adapter' + indexes[i]);
-					result = resultArray.join(',');				
-				]]>
-				</javaScript>
-			</recipientList>
+			<from uri="dataset:uniqueRandom" />
+			<multicast strategyRef="combinePointAndColor">
+				<to uri="text2Point" />
+				<to uri="direct:enrich" />			
+			</multicast>
+			<to uri="bean:adapter0" />
+		</route>
+		
+		<route>
+			<from uri="direct:enrich" />
+			<setHeader headerName="point_x"><mvel>request.body.split(' ')[0]</mvel></setHeader>
+			<setHeader headerName="point_y"><mvel>request.body.split(' ')[1]</mvel></setHeader>
+			<transform>
+				<constant>
+					select color from pixel_colors
+					where image_name = 'sampleImage'
+					and x = :?point_x and y = :?point_y
+				</constant>				
+			</transform>
+			<to uri="jdbc:pointColorsDB?useHeadersAsParameters=true&amp;outputType=SelectOne" />
+			<to uri="bean:map2Color" />
 		</route>
 	</camelContext>
 </beans>

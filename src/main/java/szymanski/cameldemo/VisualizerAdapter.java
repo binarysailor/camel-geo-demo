@@ -28,7 +28,9 @@ public class VisualizerAdapter {
 		
 		if (body instanceof Point) {
 			Point p = (Point) body;
-			visualizer.showPoint(panelIndex, p.x, p.y, DEFAULT_COLOR);
+			final Color messageColor = (Color)ex.getIn().getHeader("pointColor");
+			final Color color = messageColor != null ? messageColor : DEFAULT_COLOR;
+			visualizer.showPoint(panelIndex, p.x, p.y, color);
 		} else {
 			throw new UnsupportedOperationException("Only Points can be drawn");
 		}

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://camel.apache.org/schema/spring
+		http://camel.apache.org/schema/spring/camel-spring-2.12.3.xsd">
+	<bean id="pointColorsDB" class="org.h2.jdbcx.JdbcDataSource">
+		<property name="url" value="jdbc:h2:mem:colors;DB_CLOSE_DELAY=-1" />
+	</bean>	
+	
+	<bean id="dbInitializer" class="szymanski.cameldemo.colordb.DatabaseInitializer" init-method="init">
+		<constructor-arg ref="pointColorsDB" />
+		<constructor-arg value="sampleImage" />
+		<constructor-arg value="/szymanski/cameldemo/colordb/image.dat" />
+	</bean>
+</beans>

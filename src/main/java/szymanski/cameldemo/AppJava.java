@@ -1,8 +1,11 @@
 package szymanski.cameldemo;
 
+import org.apache.camel.ExchangePattern;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.impl.SimpleRegistry;
+import org.apache.camel.model.language.MvelExpression;
+import org.apache.camel.processor.aggregate.AggregationStrategy;
 
 import szymanski.cameldemo.visualizer.api.Visualizer;
 import szymanski.cameldemo.visualizer.impl.VisualizerFactory;
@@ -18,15 +21,24 @@ public class AppJava {
 		context.addRoutes(new RouteBuilder() {
 			@Override
 			public void configure() throws Exception {
+				AggregationStrategy strategy = CombineCoordsAndColor.instance();
+				
 				from("dataset:random?produceDelay=20")
+				.multicast().to("bean:text2Point", "seda:e")
+				.aggregationStrategy(strategy).end()
+				.to("bean:adapter0");
+				
+				from("seda:e").setExchangePattern(ExchangePattern.InOut)
 				.beanRef("text2Point")
-				.beanRef("pointRecipientList") // sets the header
-				.recipientList().javaScript( // reads the header
-						  "var resultArray = [];"
-						+ "var indexes = request.headers.get('adapterIndexes'); "
-						+ "for (var i = 0; i < indexes.length; i++) resultArray.push('bean:adapter' + indexes[i]);"
-						+ "result = resultArray.join(',')"
-				);
+				.setHeader("point_x", simple("body.x"))
+				.setHeader("point_y", simple("body.y"))
+				/*
+				.transform(constant("select r, g, b from colors where x = :body_x and y = :body_y"))
+				.to("jdbc:pointColorsDB?outputType=SelectOne")
+				*/
+				.to("bean:tempMap")
+				//.transform().mvel("new java.awt.Color((int)body.get('r'), (int)body.get('g'), (int)body.get('b'))");
+				.to("bean:map2Color");
 			}
 		});
 		context.start();
@@ -42,7 +54,8 @@ public class AppJava {
 		registry.put("adapter2", new VisualizerAdapter(visualizer, 2));
 		registry.put("adapter3", new VisualizerAdapter(visualizer, 3));
 		registry.put("random", new RandomPointDataSet(40, 30, 500));
-		registry.put("pointRecipientList", new PointRecipientList());
+		registry.put("map2Color", new ColorMapper());
+		registry.put("tempMap", new TempMap());
 		return registry;
 	}
 }

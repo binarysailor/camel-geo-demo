@@ -62,6 +62,16 @@
 			<version>${camel-version}</version>
 			<scope>runtime</scope>
 		</dependency>		
+		<dependency>
+			<groupId>org.apache.camel</groupId>
+			<artifactId>camel-jdbc</artifactId>
+			<version>${camel-version}</version>
+		</dependency>	
+		<dependency>
+			<groupId>org.apache.camel</groupId>
+			<artifactId>camel-mvel</artifactId>
+			<version>${camel-version}</version>
+		</dependency>			
 	</dependencies>
 
 	<build>

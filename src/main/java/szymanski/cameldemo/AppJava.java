@@ -24,11 +24,11 @@ public class AppJava {
 				AggregationStrategy strategy = CombineCoordsAndColor.instance();
 				
 				from("dataset:random?produceDelay=20")
-				.multicast().to("bean:text2Point", "seda:e")
+				.multicast().to(ExchangePattern.InOut, "bean:text2Point", "direct:e")
 				.aggregationStrategy(strategy).end()
 				.to("bean:adapter0");
 				
-				from("seda:e").setExchangePattern(ExchangePattern.InOut)
+				from("direct:e").setExchangePattern(ExchangePattern.InOut)
 				.beanRef("text2Point")
 				.setHeader("point_x", simple("body.x"))
 				.setHeader("point_y", simple("body.y"))

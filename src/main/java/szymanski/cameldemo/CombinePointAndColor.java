@@ -31,7 +31,7 @@ class CombineCoordsAndColor implements AggregationStrategy {
 	}
 
 	private Exchange combine(Exchange coordExchange, Exchange colorExchange) {
-		final Color color = colorExchange.getOut().getBody(Color.class);
+		final Color color = colorExchange.getIn().getBody(Color.class);
 		coordExchange.getIn().setHeader("pointColor", color);
 		return coordExchange;
 	}

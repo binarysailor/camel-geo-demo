@@ -9,6 +9,7 @@ import org.apache.camel.processor.aggregate.AggregationStrategy;
 class CombineCoordsAndColor implements AggregationStrategy {
 
 	private static CombineCoordsAndColor instance = new CombineCoordsAndColor();
+	private ColorMapper colorMapper = new ColorMapper();
 	
 	private CombineCoordsAndColor() {
 	}
@@ -31,7 +32,8 @@ class CombineCoordsAndColor implements AggregationStrategy {
 	}
 
 	private Exchange combine(Exchange coordExchange, Exchange colorExchange) {
-		final Color color = colorExchange.getIn().getBody(Color.class);
+		final String hexColor = colorExchange.getIn().getBody(String.class);
+		final Color color = colorMapper.hexToColor(hexColor);
 		coordExchange.getIn().setHeader("pointColor", color);
 		return coordExchange;
 	}

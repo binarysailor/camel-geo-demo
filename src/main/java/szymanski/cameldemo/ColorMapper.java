@@ -7,6 +7,11 @@ import org.apache.camel.Exchange;
 public class ColorMapper {
 	public void mapToColor(Exchange ex) {
 		String hexColor = ex.getIn().getBody(String.class);
+		final Color color = hexToColor(hexColor);
+		ex.getOut().setBody(color);
+	}
+
+	Color hexToColor(String hexColor) {
 		final Color color;
 		if (hexColor == null) {
 			color = Color.black;
@@ -16,6 +21,6 @@ public class ColorMapper {
 			int b = Integer.parseInt(hexColor.substring(4), 16);
 			color = new Color(r, g, b);
 		}
-		ex.getOut().setBody(color);
+		return color;
 	}
 }

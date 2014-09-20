@@ -34,17 +34,15 @@
 	<camelContext xmlns="http://camel.apache.org/schema/spring">
 		<route>
 			<from uri="dataset:uniqueRandom" />
-			<multicast strategyRef="combinePointAndColor">
-				<to uri="text2Point" />
-				<to uri="direct:enrich" />			
-			</multicast>
+			<to uri="bean:text2Point" />
+			<enrich uri="direct:enrich" strategyRef="combinePointAndColor" />
 			<to uri="bean:adapter0" />
 		</route>
 		
 		<route>
 			<from uri="direct:enrich" />
-			<setHeader headerName="point_x"><mvel>request.body.split(' ')[0]</mvel></setHeader>
-			<setHeader headerName="point_y"><mvel>request.body.split(' ')[1]</mvel></setHeader>
+			<setHeader headerName="point_x"><mvel>request.body.x</mvel></setHeader>
+			<setHeader headerName="point_y"><mvel>request.body.y</mvel></setHeader>
 			<transform>
 				<constant>
 					select color from pixel_colors
@@ -53,7 +51,6 @@
 				</constant>				
 			</transform>
 			<to uri="jdbc:pointColorsDB?useHeadersAsParameters=true&amp;outputType=SelectOne" />
-			<to uri="bean:map2Color" />
 		</route>
 	</camelContext>
 </beans>

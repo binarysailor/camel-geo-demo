@@ -1,6 +1,5 @@
 package szymanski.cameldemo;
 
-import org.apache.camel.ExchangePattern;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.impl.CompositeRegistry;
 import org.apache.camel.impl.DefaultCamelContext;
@@ -27,19 +26,18 @@ public class AppJava {
 				AggregationStrategy strategy = CombineCoordsAndColor.instance();
 				
 				from("dataset:uniqueRandom")
-				.multicast().to(ExchangePattern.InOut, "bean:text2Point", "direct:enrich")
-				.aggregationStrategy(strategy).end()
+				.to("bean:text2Point")
+				.enrich("direct:color", strategy)
 				.to("bean:adapter0");
 				
-				from("direct:enrich")
-				.setHeader("point_x").mvel("request.body.split(' ')[0]")
-				.setHeader("point_y").mvel("request.body.split(' ')[1]")
+				from("direct:color")
+				.setHeader("point_x").mvel("request.body.x")
+				.setHeader("point_y").mvel("request.body.y")
 				.transform(constant(
 					"select color from pixel_colors "
 					+ "where image_name = 'sampleImage' "
 					+ "and x = :?point_x and y = :?point_y"))
-				.to("jdbc:pointColorsDB?useHeadersAsParameters=true&outputType=SelectOne")
-				.to("bean:map2Color");
+				.to("jdbc:pointColorsDB?useHeadersAsParameters=true&outputType=SelectOne");
 			}
 		});
 		context.start();

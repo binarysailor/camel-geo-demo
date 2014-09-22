@@ -16,7 +16,7 @@ import org.springframework.context.Lifecycle;
 
 import szymanski.cameldemo.visualizer.api.Stoppable;
 
-class CamelUtils {
+public class CamelUtils {
 	public static void stopAfterWindowClosed(DefaultCamelContext context) {
 		WindowListener listener = new StopCamelContext(context);
 		CamelUtils.createWindowWithListener(listener);

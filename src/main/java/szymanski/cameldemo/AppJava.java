@@ -9,28 +9,29 @@ import org.apache.camel.spi.Registry;
 import org.apache.camel.spring.spi.ApplicationContextRegistry;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
-import szymanski.cameldemo.visualizer.api.Visualizer;
-import szymanski.cameldemo.visualizer.impl.VisualizerFactory;
+import szymanski.cameldemo.visualizer.component.VisualizerComponent;
 
 public class AppJava {
 	public static void main(String[] args) throws Exception {
 
-		Visualizer visualizer = VisualizerFactory.create();
-		Registry registry = AppJava.buildRegistry(visualizer);
+		Registry registry = AppJava.buildRegistry();
 		
 		DefaultCamelContext context = new DefaultCamelContext(registry);
-
+		context.addComponent("visualizer", new VisualizerComponent());
+		
 		context.addRoutes(new RouteBuilder() {
 			@Override
 			public void configure() throws Exception {
 				AggregationStrategy strategy = CombineCoordsAndColor.instance();
 				
 				from("dataset:uniqueRandom")
+				.routeId("random-points-to-visualizer")
 				.to("bean:text2Point")
 				.enrich("direct:color", strategy)
-				.to("bean:adapter0");
+				.to("visualizer:panel0");
 				
 				from("direct:color")
+				.routeId("point-color-enricher")
 				.setHeader("point_x").mvel("request.body.x")
 				.setHeader("point_y").mvel("request.body.y")
 				.transform(constant(
@@ -41,15 +42,13 @@ public class AppJava {
 			}
 		});
 		context.start();
-		visualizer.registerStoppable(CamelUtils.stoppableCamel(context));
 	}
 
-	private static Registry buildRegistry(Visualizer visualizer) {
+	private static Registry buildRegistry() {
 		CompositeRegistry registry = new CompositeRegistry();
 	
 		SimpleRegistry simpleRegistry = new SimpleRegistry();
 		simpleRegistry.put("text2Point", new Text2PointProcessor());
-		simpleRegistry.put("adapter0", new VisualizerAdapter(visualizer, 0));
 		simpleRegistry.put("uniqueRandom", new NonRepeatingRandomPointDataSet(50, 40, 6000));
 		simpleRegistry.put("map2Color", new ColorMapper());
 		registry.addRegistry(simpleRegistry);

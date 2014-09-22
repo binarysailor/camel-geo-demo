@@ -34,7 +34,7 @@ public class VisualizerEndpoint extends DefaultEndpoint {
 
 	@Override
 	public Consumer createConsumer(Processor processor) throws Exception {
-		throw new UnsupportedOperationException("Visualizer does not support consumers");
+		return new VisualizerConsumer(this, processor);
 	}
 
 	@Override

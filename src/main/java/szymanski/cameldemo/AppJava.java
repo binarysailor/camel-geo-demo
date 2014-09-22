@@ -39,6 +39,10 @@ public class AppJava {
 					+ "where image_name = 'sampleImage' "
 					+ "and x = :?point_x and y = :?point_y"))
 				.to("jdbc:pointColorsDB?useHeadersAsParameters=true&outputType=SelectOne");
+				
+				from("visualizer:panel0").filter()
+					.xquery("xs:integer(/point/x) lt 0 and xs:integer(/point/y) lt 0")
+					.to("stream:out");
 			}
 		});
 		context.start();

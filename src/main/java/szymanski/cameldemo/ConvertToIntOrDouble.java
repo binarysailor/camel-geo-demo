@@ -5,10 +5,12 @@ import org.apache.camel.Exchange;
 public class ConvertToIntOrDouble {
 	public void convert(Exchange ex, String input) {
 		if (input.indexOf(".") >= 0) {
-			ex.getOut().setBody(Double.valueOf(input));
+			Double d = Double.valueOf(input);
+			ex.getOut().setBody(d);
 			ex.getOut().setHeader("recipient", "direct:doublesqrt");
 		} else {
-			ex.getOut().setBody(Integer.valueOf(input));
+			Integer i = Integer.valueOf(input);
+			ex.getOut().setBody(i);
 			ex.getOut().setHeader("recipient", "direct:intsqrt");
 		}
 	}

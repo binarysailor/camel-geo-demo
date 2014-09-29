@@ -18,7 +18,9 @@ public class ErrorsApp {
 		context.addRoutes(new RouteBuilder() {
 			@Override
 			public void configure() throws Exception {
-				errorHandler(deadLetterChannel("direct:dlc").maximumRedeliveries(1).redeliveryDelay(1000));				
+				errorHandler(deadLetterChannel("direct:dlc").maximumRedeliveries(10).redeliveryDelay(1000));
+				onException(NumberFormatException.class).handled(true).to("file:C:/Temp/camel-out/errors");
+				onException(IllegalArgumentException.class).handled(true).convertBodyTo(String.class).to("file:C:/Temp/camel-out/errors");
 				
 				from("direct:sqrt")
 				.routeId("compute-sqrt")
@@ -37,7 +39,7 @@ public class ErrorsApp {
 				
 				from("direct:dlc")
 				.routeId("DLC")
-				.setHeader("name", constant("DLC"))
+				.setHeader("name", simple("DLC"))
 				.to("direct:output");
 				
 				from("direct:output")
@@ -72,7 +74,7 @@ public class ErrorsApp {
 			if (input < 0) {
 				throw new IllegalArgumentException("Don't know how to compute square root of a negative number");
 			}
-			if (rnd.nextBoolean()) {
+			if (input > 1000 || rnd.nextBoolean()) {
 				throw new TimeoutException("Double square root calculator is busy now. Try later");
 			}
 			

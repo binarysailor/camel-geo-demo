@@ -18,9 +18,6 @@ public class ErrorsApp {
 		context.addRoutes(new RouteBuilder() {
 			@Override
 			public void configure() throws Exception {
-				errorHandler(deadLetterChannel("direct:dlc").maximumRedeliveries(10).redeliveryDelay(1000));
-				onException(NumberFormatException.class).handled(true).to("file:C:/Temp/camel-out/errors");
-				onException(IllegalArgumentException.class).handled(true).convertBodyTo(String.class).to("file:C:/Temp/camel-out/errors");
 				
 				from("direct:sqrt")
 				.routeId("compute-sqrt")
@@ -29,13 +26,21 @@ public class ErrorsApp {
 				
 				from("direct:intsqrt")
 				.routeId("compute-int-sqrt")
-				.to("bean:sqrtCalc?method=intSqrt")
-				.setHeader("name", simple("int"));
+				.doTry()
+					.to("bean:sqrtCalc?method=intSqrt")
+					.setHeader("name", simple("int"))
+				.doCatch(IllegalArgumentException.class)
+					.to("direct:dlc")
+					.stop();
 				
 				from("direct:doublesqrt")
 				.routeId("compute-double-sqrt")
-				.to("bean:sqrtCalc?method=doubleSqrt")
-				.setHeader("name", simple("double"));
+				.doTry()
+					.to("bean:sqrtCalc?method=doubleSqrt")
+					.setHeader("name", simple("double"))
+				.doCatch(IllegalArgumentException.class)
+					.to("direct:dlc")
+					.stop();
 				
 				from("direct:dlc")
 				.routeId("DLC")
@@ -46,7 +51,11 @@ public class ErrorsApp {
 				.setBody(simple("${headers.name}: ${in.body}"))
 				.to("stream:out");
 
-				from("stream:in?promptMessage=Enter number: ").bean(ConvertToIntOrDouble.class).to("direct:sqrt");
+				from("stream:in?promptMessage=Enter number: ")
+				.doTry()
+					.bean(ConvertToIntOrDouble.class).to("direct:sqrt")
+				.doCatch(NumberFormatException.class)
+					.to("direct:dlc");
 			}
 		});
 		context.start();

@@ -18,6 +18,8 @@ public class ErrorsApp {
 		context.addRoutes(new RouteBuilder() {
 			@Override
 			public void configure() throws Exception {
+				errorHandler(deadLetterChannel("direct:dlc").maximumRedeliveries(1).redeliveryDelay(1000));				
+				
 				from("direct:sqrt")
 				.routeId("compute-sqrt")
 				.recipientList(header("recipient"))
@@ -32,6 +34,11 @@ public class ErrorsApp {
 				.routeId("compute-double-sqrt")
 				.to("bean:sqrtCalc?method=doubleSqrt")
 				.setHeader("name", simple("double"));
+				
+				from("direct:dlc")
+				.routeId("DLC")
+				.setHeader("name", constant("DLC"))
+				.to("direct:output");
 				
 				from("direct:output")
 				.setBody(simple("${headers.name}: ${in.body}"))
